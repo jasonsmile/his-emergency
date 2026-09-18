@@ -1,0 +1,19 @@
+.env
+*.log
+server/config/config.yaml
+web/node_modules/
+web/dist/
+server/bin/
+
+# IDE and local tooling
+.idea/
+.vscode/
+
+# Build artifacts and archives
+*.tar
+*.tar.gz
+*.zip
+
+# OS-generated files
+.DS_Store
+Thumbs.db

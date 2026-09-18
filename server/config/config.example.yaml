@@ -1,0 +1,28 @@
+server:
+  port: 8080
+  mode: release
+
+database:
+  host: 127.0.0.1
+  port: 3306
+  username: his_app
+  password: change-me
+  dbname: his_emergency
+  max_open_conns: 30
+  max_idle_conns: 10
+  conn_max_lifetime_seconds: 3600
+
+jwt:
+  # 生产环境请使用长度足够的随机密钥，并通过环境变量或受限配置注入。
+  secret: change-me-to-a-long-random-secret
+  expire_hours: 12
+
+log:
+  level: info
+  filename: /var/log/emergency-his/server.log
+
+his:
+  emergency_mode: false
+  invoice_prefix: E
+  base_url: ""
+  api_key: ""

@@ -1,0 +1,11 @@
+services:
+  server:
+    image: emergency-his-server:0.1.0
+    container_name: emergency-his-server
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ../server/config/config.yaml:/app/config/config.yaml:ro
