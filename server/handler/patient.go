@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"strings"
 
-	"emergency-his/server/pkg/response"
+	"emergency-his/server/response"
 	"github.com/gin-gonic/gin"
 )
 

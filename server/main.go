@@ -7,6 +7,7 @@ import (
 
 	"emergency-his/server/config"
 	"emergency-his/server/database"
+	"emergency-his/server/logger"
 	"emergency-his/server/router"
 )
 
@@ -17,6 +18,10 @@ func main() {
 	}
 	cfg, err := config.Load(configPath)
 	if err != nil {
+		log.Fatal(err)
+	}
+	config.SetConfig(cfg)
+	if err := logger.Init(cfg.Log.Filename); err != nil {
 		log.Fatal(err)
 	}
 	db, err := database.InitMySQL(cfg.Database)

@@ -3,9 +3,21 @@ package config
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"gopkg.in/yaml.v3"
 )
+
+var (
+	current *Config
+	mu      sync.RWMutex
+)
+
+// SetConfig 设置当前进程使用的配置。
+func SetConfig(cfg *Config) { mu.Lock(); current = cfg; mu.Unlock() }
+
+// GetConfig 获取当前进程配置。未初始化时返回空配置，便于调用方给出明确错误。
+func GetConfig() *Config { mu.RLock(); defer mu.RUnlock(); return current }
 
 type Config struct {
 	Server   ServerConfig   `yaml:"server"`

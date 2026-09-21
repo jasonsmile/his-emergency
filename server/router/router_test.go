@@ -10,8 +10,29 @@ import (
 func TestHealthOnly(t *testing.T) {
 	r := SetupRouter("release", (*sql.DB)(nil))
 	routes := r.Routes()
-	if len(routes) != 2 || routes[0].Method != http.MethodGet || routes[0].Path != "/health" || routes[1].Path != "/api/v1/patients" {
-		t.Fatalf("expected health and patient query routes, got %v", routes)
+	if len(routes) != 11 {
+		t.Fatalf("expected health, login and registration routes, got %v", routes)
+	}
+	routeSet := make(map[string]bool, len(routes))
+	for _, route := range routes {
+		routeSet[route.Method+" "+route.Path] = true
+	}
+	for _, route := range []string{
+		http.MethodGet + " /health",
+		http.MethodPost + " /api/login",
+		http.MethodGet + " /api/registration/searchPatients",
+		http.MethodGet + " /api/registration/getPatientDetail",
+		http.MethodGet + " /api/registration/getDepts",
+		http.MethodGet + " /api/registration/getDoctors",
+		http.MethodGet + " /api/registration/getSchedules",
+		http.MethodPost + " /api/registration/createRegistration",
+		http.MethodGet + " /api/registration/getEncounterList",
+		http.MethodGet + " /api/registration/getEncounterDetail",
+		http.MethodPost + " /api/registration/cancelEncounter",
+	} {
+		if !routeSet[route] {
+			t.Fatalf("missing route %s; got %v", route, routes)
+		}
 	}
 	for _, tc := range []struct {
 		path   string
@@ -19,7 +40,7 @@ func TestHealthOnly(t *testing.T) {
 		body   string
 	}{
 		{"/health", http.StatusOK, `{"status":"ok"}`},
-		{"/api/v1/system/info", http.StatusNotFound, "404 page not found"},
+		{"/api/patients", http.StatusNotFound, "404 page not found"},
 	} {
 		t.Run(tc.path, func(t *testing.T) {
 			w := httptest.NewRecorder()

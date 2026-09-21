@@ -16,7 +16,7 @@ interface ApiResponse<T> {
 }
 
 export async function listPatients(keyword: string): Promise<Patient[]> {
-  const { data } = await axios.get<ApiResponse<Patient[]>>('/api/v1/patients', {
+  const { data } = await axios.get<ApiResponse<Patient[]>>('/api/patients', {
     params: { keyword: keyword.trim() },
     timeout: 15000,
   })

@@ -1,6 +1,6 @@
 # 患者查询 Demo
 
-基于 Vue 3、TypeScript、Element Plus，参考 Pure Admin 的浅色后台布局。页面使用真实的 `GET /api/v1/patients` 接口，不内置模拟患者。
+基于 Vue 3、TypeScript、Element Plus，当前前端仅保留基础页面框架。
 
 ## 本地启动
 

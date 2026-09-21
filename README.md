@@ -77,7 +77,7 @@ emergency-his/
 ```bash
 cd backend
 go mod tidy
-go run ./cmd/server
+go run .
 ```
 
 前端：
