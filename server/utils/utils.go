@@ -9,9 +9,10 @@ import (
 )
 
 // GenerateNo 生成单号。
-// 格式为 prefix + YYYYMMDD + 4 位随机字符。
+// 格式为 prefix + YYYYMMDD + 8 位随机字符。
+// 使用 8 位随机字符，降低高频写入时的单号重复概率。
 func GenerateNo(prefix string) string {
-	return fmt.Sprintf("%s%s%s", prefix, time.Now().Format("20060102"), generateRandom(4))
+	return fmt.Sprintf("%s%s%s", prefix, time.Now().Format("20060102"), generateRandom(8))
 }
 
 // GenerateNoWithSeq 生成带日期和序列号的单号。

@@ -197,9 +197,11 @@ func (r *RegistrationRepository) SearchPatients(keyword string, page, pageSize i
 func (r *RegistrationRepository) GetPatientByID(patientID string) (*PatientModel, error) {
 	p := &PatientModel{}
 	var birthDate sql.NullTime
-	err := r.db.QueryRow(`SELECT id, patient_id, name, gender, birth_date, id_card_no, phone,
+	query := `SELECT id, patient_id, name, gender, birth_date, id_card_no, phone,
 		charge_type, identity_type, address, emergency_contact, emergency_phone, card_no
-		FROM sync_patient WHERE patient_id = ?`, patientID).Scan(
+		FROM sync_patient WHERE patient_id = ?`
+	logger.SQL(query, patientID)
+	err := r.db.QueryRow(query, patientID).Scan(
 		&p.ID, &p.PatientID, &p.Name, &p.Gender, &birthDate,
 		&p.IDCardNo, &p.Phone, &p.ChargeType, &p.IdentityType, &p.Address,
 		&p.EmergencyContact, &p.EmergencyPhone, &p.CardNo,
@@ -221,7 +223,9 @@ func (r *RegistrationRepository) GetDepts(isOutpatientOnly bool) ([]*DeptModel, 
 	if isOutpatientOnly {
 		query += " AND is_outpatient = 1"
 	}
-	rows, err := r.db.Query(query + " ORDER BY dept_code")
+	query += " ORDER BY dept_code"
+	logger.SQL(query)
+	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +248,9 @@ func (r *RegistrationRepository) GetDoctors(deptCode string) ([]*DoctorModel, er
 		query += " AND dept_code = ?"
 		args = append(args, deptCode)
 	}
-	rows, err := r.db.Query(query+" ORDER BY doctor_code", args...)
+	query += " ORDER BY doctor_code"
+	logger.SQL(query, args...)
+	rows, err := r.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -262,7 +268,9 @@ func (r *RegistrationRepository) GetDoctors(deptCode string) ([]*DoctorModel, er
 
 func (r *RegistrationRepository) GetDoctorByCode(doctorCode string) (*DoctorModel, error) {
 	d := &DoctorModel{}
-	err := r.db.QueryRow(`SELECT id, doctor_code, name, title, title_code, dept_code, specialty, room, room_code FROM sync_doctor WHERE doctor_code = ? AND status = 1`, doctorCode).Scan(&d.ID, &d.DoctorCode, &d.Name, &d.Title, &d.TitleCode, &d.DeptCode, &d.Specialty, &d.Room, &d.RoomCode)
+	query := `SELECT id, doctor_code, name, title, title_code, dept_code, specialty, room, room_code FROM sync_doctor WHERE doctor_code = ? AND status = 1`
+	logger.SQL(query, doctorCode)
+	err := r.db.QueryRow(query, doctorCode).Scan(&d.ID, &d.DoctorCode, &d.Name, &d.Title, &d.TitleCode, &d.DeptCode, &d.Specialty, &d.Room, &d.RoomCode)
 	if err == sql.ErrNoRows {
 		return nil, apperrors.NewBusinessError(40402, "医生不存在或已停用")
 	}
@@ -281,7 +289,9 @@ func (r *RegistrationRepository) GetSchedules(clinicDate, deptCode, doctorID, ti
 			args = append(args, filter.value)
 		}
 	}
-	rows, err := r.db.Query(query+" ORDER BY clinic_dept, time_desc, doctor_id", args...)
+	query += " ORDER BY clinic_dept, time_desc, doctor_id"
+	logger.SQL(query, args...)
+	rows, err := r.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +309,9 @@ func (r *RegistrationRepository) GetSchedules(clinicDate, deptCode, doctorID, ti
 
 func (r *RegistrationRepository) GetScheduleByID(id int64) (*ScheduleModel, error) {
 	s := &ScheduleModel{}
-	err := r.db.QueryRow(`SELECT id, clinic_date, clinic_dept, dept_name, clinic_label, time_desc, doctor_id, doctor_name, registration_limits, registration_num, regist_price, clinic_type, states FROM sync_schedule WHERE id = ?`, id).Scan(&s.ID, &s.ClinicDate, &s.ClinicDept, &s.DeptName, &s.ClinicLabel, &s.TimeDesc, &s.DoctorID, &s.DoctorName, &s.RegistrationLimits, &s.RegistrationNum, &s.RegistPrice, &s.ClinicType, &s.States)
+	query := `SELECT id, clinic_date, clinic_dept, dept_name, clinic_label, time_desc, doctor_id, doctor_name, registration_limits, registration_num, regist_price, clinic_type, states FROM sync_schedule WHERE id = ?`
+	logger.SQL(query, id)
+	err := r.db.QueryRow(query, id).Scan(&s.ID, &s.ClinicDate, &s.ClinicDept, &s.DeptName, &s.ClinicLabel, &s.TimeDesc, &s.DoctorID, &s.DoctorName, &s.RegistrationLimits, &s.RegistrationNum, &s.RegistPrice, &s.ClinicType, &s.States)
 	if err == sql.ErrNoRows {
 		return nil, apperrors.NewBusinessError(40403, "排班不存在")
 	}
@@ -310,7 +322,9 @@ func (r *RegistrationRepository) GetScheduleByID(id int64) (*ScheduleModel, erro
 }
 
 func (r *RegistrationRepository) IncrementScheduleRegNum(scheduleID int64) error {
-	result, err := r.db.Exec(`UPDATE sync_schedule SET registration_num = registration_num + 1 WHERE id = ? AND registration_num < registration_limits`, scheduleID)
+	query := `UPDATE sync_schedule SET registration_num = registration_num + 1 WHERE id = ? AND registration_num < registration_limits`
+	logger.SQL(query, scheduleID)
+	result, err := r.db.Exec(query, scheduleID)
 	if err != nil {
 		return err
 	}
@@ -326,12 +340,17 @@ func (r *RegistrationRepository) IncrementScheduleRegNum(scheduleID int64) error
 
 func (r *RegistrationRepository) GetTodayEncounterCount() (int, error) {
 	var count int
-	err := r.db.QueryRow(`SELECT COUNT(*) FROM emergency_encounter WHERE DATE(reg_time) = CURDATE()`).Scan(&count)
+	query := `SELECT COUNT(*) FROM emergency_encounter WHERE DATE(reg_time) = CURDATE()`
+	logger.SQL(query)
+	err := r.db.QueryRow(query).Scan(&count)
 	return count, err
 }
 
 func (r *RegistrationRepository) CreateEncounter(e *EncounterModel) (int64, error) {
-	result, err := r.db.Exec(`INSERT INTO emergency_encounter (visit_no, patient_id, patient_name, patient_age, gender, id_card_no, phone, charge_type, encounter_type, dept_id, dept_name, doctor_id, doctor_name, doctor_title, reg_time, encounter_status, is_emergency, is_green_channel, payment_status, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 'REGISTERED', ?, ?, 'UNPAID', ?)`, e.VisitNo, e.PatientID, e.PatientName, e.PatientAge, e.Gender, e.IDCardNo, e.Phone, e.ChargeType, e.EncounterType, e.DeptID, e.DeptName, e.DoctorID, e.DoctorName, e.DoctorTitle, e.IsEmergency, e.IsGreenChannel, e.Remark)
+	query := `INSERT INTO emergency_encounter (visit_no, patient_id, patient_name, patient_age, gender, id_card_no, phone, charge_type, encounter_type, dept_id, dept_name, doctor_id, doctor_name, doctor_title, reg_time, encounter_status, is_emergency, is_green_channel, payment_status, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 'REGISTERED', ?, ?, 'UNPAID', ?)`
+	args := []interface{}{e.VisitNo, e.PatientID, e.PatientName, e.PatientAge, e.Gender, e.IDCardNo, e.Phone, e.ChargeType, e.EncounterType, e.DeptID, e.DeptName, e.DoctorID, e.DoctorName, e.DoctorTitle, e.IsEmergency, e.IsGreenChannel, e.Remark}
+	logger.SQL(query, args...)
+	result, err := r.db.Exec(query, args...)
 	if err != nil {
 		return 0, err
 	}
@@ -340,7 +359,9 @@ func (r *RegistrationRepository) CreateEncounter(e *EncounterModel) (int64, erro
 
 func (r *RegistrationRepository) HasActiveRegistration(patientID, deptID, doctorID string) (bool, error) {
 	var count int
-	err := r.db.QueryRow(`SELECT COUNT(*) FROM emergency_encounter WHERE patient_id = ? AND dept_id = ? AND doctor_id = ? AND DATE(reg_time) = CURDATE() AND encounter_status IN ('REGISTERED', 'IN_TREATMENT')`, patientID, deptID, doctorID).Scan(&count)
+	query := `SELECT COUNT(*) FROM emergency_encounter WHERE patient_id = ? AND dept_id = ? AND doctor_id = ? AND DATE(reg_time) = CURDATE() AND encounter_status IN ('REGISTERED', 'IN_TREATMENT')`
+	logger.SQL(query, patientID, deptID, doctorID)
+	err := r.db.QueryRow(query, patientID, deptID, doctorID).Scan(&count)
 	return count > 0, err
 }
 
@@ -366,11 +387,23 @@ func (r *RegistrationRepository) GetEncounterList(req *GetEncounterListRequest) 
 		args = append(args, like, like)
 	}
 	var total int64
-	if err := r.db.QueryRow("SELECT COUNT(*) FROM emergency_encounter"+where, args...).Scan(&total); err != nil {
+	countQuery := "SELECT COUNT(*) FROM emergency_encounter" + where
+	logger.SQL(countQuery, args...)
+	if err := r.db.QueryRow(countQuery, args...).Scan(&total); err != nil {
 		return nil, 0, err
 	}
 	args = append(args, req.PageSize, (req.Page-1)*req.PageSize)
-	rows, err := r.db.Query(`SELECT id,visit_no,patient_id,patient_name,patient_age,gender,phone,charge_type,encounter_type,dept_id,dept_name,doctor_id,doctor_name,doctor_title,reg_time,encounter_status,total_amount,paid_amount,payment_status,is_emergency,is_green_channel,remark,created_at FROM emergency_encounter`+where+` ORDER BY reg_time DESC LIMIT ? OFFSET ?`, args...)
+	query := `SELECT id, visit_no, patient_id,
+		COALESCE(patient_name, ''), COALESCE(patient_age, ''), COALESCE(gender, ''),
+		COALESCE(phone, ''), COALESCE(charge_type, ''), COALESCE(encounter_type, ''),
+		COALESCE(dept_id, ''), COALESCE(dept_name, ''), COALESCE(doctor_id, ''),
+		COALESCE(doctor_name, ''), COALESCE(doctor_title, ''), reg_time,
+		COALESCE(encounter_status, ''), COALESCE(total_amount, 0), COALESCE(paid_amount, 0),
+		COALESCE(payment_status, ''), COALESCE(is_emergency, 0), COALESCE(is_green_channel, 0),
+		COALESCE(remark, ''), created_at
+		FROM emergency_encounter` + where + ` ORDER BY reg_time DESC LIMIT ? OFFSET ?`
+	logger.SQL(query, args...)
+	rows, err := r.db.Query(query, args...)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -389,7 +422,17 @@ func (r *RegistrationRepository) GetEncounterList(req *GetEncounterListRequest) 
 func (r *RegistrationRepository) GetEncounterByID(id int64) (*EncounterInfo, error) {
 	e := &EncounterInfo{}
 	var startTime, endTime sql.NullTime
-	err := r.db.QueryRow(`SELECT id,visit_no,patient_id,patient_name,patient_age,gender,phone,charge_type,encounter_type,dept_id,dept_name,doctor_id,doctor_name,doctor_title,reg_time,start_time,end_time,encounter_status,total_amount,paid_amount,payment_status,is_emergency,is_green_channel,remark,created_at FROM emergency_encounter WHERE id=?`, id).Scan(&e.ID, &e.VisitNo, &e.PatientID, &e.PatientName, &e.PatientAge, &e.Gender, &e.Phone, &e.ChargeType, &e.EncounterType, &e.DeptID, &e.DeptName, &e.DoctorID, &e.DoctorName, &e.DoctorTitle, &e.RegTime, &startTime, &endTime, &e.EncounterStatus, &e.TotalAmount, &e.PaidAmount, &e.PaymentStatus, &e.IsEmergency, &e.IsGreenChannel, &e.Remark, &e.CreatedAt)
+	query := `SELECT id, visit_no, patient_id,
+		COALESCE(patient_name, ''), COALESCE(patient_age, ''), COALESCE(gender, ''),
+		COALESCE(phone, ''), COALESCE(charge_type, ''), COALESCE(encounter_type, ''),
+		COALESCE(dept_id, ''), COALESCE(dept_name, ''), COALESCE(doctor_id, ''),
+		COALESCE(doctor_name, ''), COALESCE(doctor_title, ''), reg_time, start_time, end_time,
+		COALESCE(encounter_status, ''), COALESCE(total_amount, 0), COALESCE(paid_amount, 0),
+		COALESCE(payment_status, ''), COALESCE(is_emergency, 0), COALESCE(is_green_channel, 0),
+		COALESCE(remark, ''), created_at
+		FROM emergency_encounter WHERE id=?`
+	logger.SQL(query, id)
+	err := r.db.QueryRow(query, id).Scan(&e.ID, &e.VisitNo, &e.PatientID, &e.PatientName, &e.PatientAge, &e.Gender, &e.Phone, &e.ChargeType, &e.EncounterType, &e.DeptID, &e.DeptName, &e.DoctorID, &e.DoctorName, &e.DoctorTitle, &e.RegTime, &startTime, &endTime, &e.EncounterStatus, &e.TotalAmount, &e.PaidAmount, &e.PaymentStatus, &e.IsEmergency, &e.IsGreenChannel, &e.Remark, &e.CreatedAt)
 	if err == sql.ErrNoRows {
 		return nil, apperrors.NewBusinessError(40404, "就诊记录不存在")
 	}
@@ -406,7 +449,9 @@ func (r *RegistrationRepository) GetEncounterByID(id int64) (*EncounterInfo, err
 }
 
 func (r *RegistrationRepository) UpdateEncounterStatus(id int64, status string) error {
-	_, err := r.db.Exec(`UPDATE emergency_encounter SET encounter_status = ? WHERE id = ?`, status, id)
+	query := `UPDATE emergency_encounter SET encounter_status = ? WHERE id = ?`
+	logger.SQL(query, status, id)
+	_, err := r.db.Exec(query, status, id)
 	return err
 }
 

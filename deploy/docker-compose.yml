@@ -5,6 +5,9 @@ services:
     restart: unless-stopped
     environment:
       TZ: Asia/Shanghai
+    # Linux Docker 中将此名称映射到宿主机网关，供容器访问宿主机 MySQL。
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "127.0.0.1:8080:8080"
     volumes:

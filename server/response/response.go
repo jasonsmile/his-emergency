@@ -3,6 +3,7 @@ package response
 import (
 	"net/http"
 
+	"emergency-his/server/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,6 +26,8 @@ func SuccessWithMessage(c *gin.Context, message string, data interface{}) {
 }
 
 func Error(c *gin.Context, status, code int, message string) {
+	logger.Error.Printf("request failed method=%s uri=%s status=%d code=%d message=%q", c.Request.Method, c.Request.URL.Path, status, code, message)
+	c.Set("error_logged", true)
 	c.JSON(status, Body{Code: code, Message: message})
 }
 

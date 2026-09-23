@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"strings"
 
+	"emergency-his/server/logger"
 	"emergency-his/server/response"
 	"github.com/gin-gonic/gin"
 )
@@ -24,6 +25,7 @@ func ListPatients(db *sql.DB) gin.HandlerFunc {
 			FROM sync_patient
 			WHERE (? = '' OR patient_id = ? OR name LIKE CONCAT('%', ?, '%') OR phone = ?)
 			ORDER BY id DESC LIMIT 100`
+		logger.SQL(query, keyword, keyword, keyword, keyword)
 		rows, err := db.QueryContext(c.Request.Context(), query, keyword, keyword, keyword, keyword)
 		if err != nil {
 			response.InternalError(c, "查询患者失败")

@@ -10,7 +10,7 @@ import (
 func TestHealthOnly(t *testing.T) {
 	r := SetupRouter("release", (*sql.DB)(nil))
 	routes := r.Routes()
-	if len(routes) != 11 {
+	if len(routes) != 16 {
 		t.Fatalf("expected health, login and registration routes, got %v", routes)
 	}
 	routeSet := make(map[string]bool, len(routes))
@@ -29,6 +29,11 @@ func TestHealthOnly(t *testing.T) {
 		http.MethodGet + " /api/registration/getEncounterList",
 		http.MethodGet + " /api/registration/getEncounterDetail",
 		http.MethodPost + " /api/registration/cancelEncounter",
+		http.MethodPost + " /api/charge/getPendingCharges",
+		http.MethodPost + " /api/charge/createCharge",
+		http.MethodPost + " /api/charge/refundCharge",
+		http.MethodGet + " /api/charge/getChargeRecords",
+		http.MethodGet + " /api/charge/getDailyReport",
 	} {
 		if !routeSet[route] {
 			t.Fatalf("missing route %s; got %v", route, routes)

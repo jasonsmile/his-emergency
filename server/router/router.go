@@ -7,6 +7,7 @@ import (
 	"emergency-his/server/handler"
 	"emergency-his/server/logger"
 	"emergency-his/server/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -35,5 +36,10 @@ func SetupRouter(mode string, db *sql.DB) *gin.Engine {
 	api.GET("/registration/getEncounterList", handler.GetEncounterList(db))
 	api.GET("/registration/getEncounterDetail", handler.GetEncounterDetail(db))
 	api.POST("/registration/cancelEncounter", handler.CancelEncounter(db))
+	api.POST("/charge/getPendingCharges", handler.GetPendingCharges(db))
+	api.POST("/charge/createCharge", handler.CreateCharge(db))
+	api.POST("/charge/refundCharge", handler.RefundCharge(db))
+	api.GET("/charge/getChargeRecords", handler.GetChargeRecords(db))
+	api.GET("/charge/getDailyReport", handler.GetDailyReport(db))
 	return r
 }
